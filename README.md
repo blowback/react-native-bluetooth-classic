@@ -1,3 +1,6 @@
+# FORK
+
+I needed to handle binary data (ie data which contains significant 0x00 bytes mid-packet) so the default string based approach was truncating incoming data. Fixed this by getting the module to emit base64 encoded strings from `readFromDevice()`. Left the function `available()` returning un-encoded bytes, so you'll actually read back 38% more data than `available()` says is there. Didn't fix up any of the event-based data handling as I don't use it.
 
 # react-native-bluetooth-classic
 

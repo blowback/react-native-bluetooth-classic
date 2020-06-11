@@ -139,7 +139,8 @@ public class RNBluetoothClassicModule
    * Used to read/write data from the Connected bluetooth device.  This should eventually be moved
    * into the RNBluetoothClassicService to create a more similar pattern to IOS.
    */
-  private StringBuffer mBuffer = new StringBuffer();
+  //private StringBuffer mBuffer = new StringBuffer();
+  private byte[] mByteBuffer = new byte[0];
 
   /**
    * Resolve or reject Bluetooth enable request.  Due to the request needing to start a new Intent
@@ -655,9 +656,14 @@ public class RNBluetoothClassicModule
   @ReactMethod
   public void readFromDevice(Promise promise) {
     if (D) Log.d(TAG, "Read");
-    int length = mBuffer.length();
-    String data = mBuffer.substring(0, length);
-    mBuffer.delete(0, length);
+    //int length = mBuffer.length();
+    //String data = mBuffer.substring(0, length);
+    //mBuffer.delete(0, length);
+    int length = mByteBuffer.length;
+    byte[] foo = Base64.encode(mByteBuffer, Base64.DEFAULT);
+    String data = new String(foo, mCharset);
+    mByteBuffer = new byte[0];
+
     promise.resolve(data);
   }
 
@@ -723,7 +729,8 @@ public class RNBluetoothClassicModule
    */
   @ReactMethod
   public void clear(Promise promise) {
-    mBuffer.setLength(0);
+    //mBuffer.setLength(0);
+    mByteBuffer = new byte[0];
     promise.resolve(true);
   }
 
@@ -736,7 +743,8 @@ public class RNBluetoothClassicModule
    */
   @ReactMethod
   public void available(Promise promise) {
-    promise.resolve(mBuffer.length());
+    //promise.resolve(mBuffer.length());
+    promise.resolve(mByteBuffer.length);
   }
 
   /**
@@ -825,19 +833,24 @@ public class RNBluetoothClassicModule
     String msg = String.format("Received %d bytes from device %s", data.length, device.getName());
     Log.d(TAG, msg);
 
-    mBuffer.append(new String(data, mCharset));
+    //mBuffer.append(new String(data, mCharset));
+
+    byte[] c = new byte[mByteBuffer.length + data.length];
+    System.arraycopy(mByteBuffer, 0, c, 0, mByteBuffer.length);
+    System.arraycopy(data, 0, c, mByteBuffer.length, data.length);
+    mByteBuffer = c;
 
     if (!mReadObserving.get()) {
       Log.d(TAG, "No BTEvent.READ listeners are registered, skipping handling of the event");
       return;
     }
 
-    String message;
-    while ((message = readUntil(this.mDelimiter)) != null) {
-      BluetoothMessage bluetoothMessage
-              = new BluetoothMessage<>(new NativeDevice(mBluetoothService.connectedDevice()).map(), message);
-      sendEvent(BluetoothEvent.READ.code, bluetoothMessage.asMap());
-    }
+    //String message;
+    //while ((message = readUntil(this.mDelimiter)) != null) {
+      //BluetoothMessage bluetoothMessage
+              //= new BluetoothMessage<>(new NativeDevice(mBluetoothService.connectedDevice()).map(), message);
+      //sendEvent(BluetoothEvent.READ.code, bluetoothMessage.asMap());
+    //}
   }
 
   /**
@@ -849,12 +862,12 @@ public class RNBluetoothClassicModule
    */
   private String readUntil(String delimiter) {
     String data = null;
-    int index = mBuffer.indexOf(delimiter, 0);
-    if (index > -1) {
-      int len = index + delimiter.length();
-      data = mBuffer.substring(0, len);
-      mBuffer.delete(0, len);
-    }
+    //int index = mBuffer.indexOf(delimiter, 0);
+    //if (index > -1) {
+      //int len = index + delimiter.length();
+      //data = mBuffer.substring(0, len);
+      //mBuffer.delete(0, len);
+    //}
     return data;
   }
 
